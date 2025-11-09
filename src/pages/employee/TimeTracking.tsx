@@ -1,0 +1,202 @@
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Clock, Coffee, LogIn, LogOut, Play, Pause } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+
+export default function TimeTracking() {
+  const [isClockedIn, setIsClockedIn] = useState(true);
+  const [isOnBreak, setIsOnBreak] = useState(false);
+  const [isTimerRunning, setIsTimerRunning] = useState(true);
+
+  const handleClockIn = () => {
+    setIsClockedIn(true);
+    toast({ title: "Clocked in", description: "Your work day has started" });
+  };
+
+  const handleClockOut = () => {
+    setIsClockedIn(false);
+    setIsTimerRunning(false);
+    toast({ title: "Clocked out", description: "Your work day has ended" });
+  };
+
+  const handleBreakStart = () => {
+    setIsOnBreak(true);
+    setIsTimerRunning(false);
+    toast({ title: "Break started", description: "Enjoy your break!" });
+  };
+
+  const handleBreakEnd = () => {
+    setIsOnBreak(false);
+    setIsTimerRunning(true);
+    toast({ title: "Break ended", description: "Welcome back!" });
+  };
+
+  const todayActivities = [
+    { time: "09:00 AM", action: "Clocked In", duration: "-" },
+    { time: "09:15 AM", action: "Started Task: Website Design", duration: "-" },
+    { time: "11:00 AM", action: "Break Started", duration: "-" },
+    { time: "11:15 AM", action: "Break Ended", duration: "15 min" },
+    { time: "01:00 PM", action: "Break Started", duration: "-" },
+    { time: "01:30 PM", action: "Break Ended", duration: "30 min" },
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold">Time Tracking</h1>
+        <p className="text-muted-foreground">Track your work hours and breaks</p>
+      </div>
+
+      {/* Current Status */}
+      <Card className="p-8 rounded-3xl bg-gradient-primary text-primary-foreground">
+        <div className="text-center space-y-6">
+          <div>
+            <p className="text-sm opacity-90 mb-2">Current Status</p>
+            <Badge 
+              className={`text-lg px-6 py-2 rounded-2xl ${
+                isOnBreak 
+                  ? "bg-warning text-warning-foreground" 
+                  : isClockedIn 
+                  ? "bg-success text-success-foreground" 
+                  : "bg-secondary text-secondary-foreground"
+              }`}
+            >
+              {isOnBreak ? "On Break" : isClockedIn ? "Working" : "Clocked Out"}
+            </Badge>
+          </div>
+
+          <div>
+            <p className="text-7xl font-bold tabular-nums">08:34:56</p>
+            <p className="text-sm opacity-90 mt-2">Total Time Today</p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 pt-4">
+            <div className="p-4 rounded-2xl bg-white/10">
+              <p className="text-2xl font-bold">6h 45m</p>
+              <p className="text-xs opacity-90">Work Time</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-white/10">
+              <p className="text-2xl font-bold">45m</p>
+              <p className="text-xs opacity-90">Break Time</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-white/10">
+              <p className="text-2xl font-bold">1h 5m</p>
+              <p className="text-xs opacity-90">Idle Time</p>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Controls */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="p-6 rounded-2xl bg-gradient-card">
+          <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-primary" />
+            Clock Controls
+          </h3>
+          <div className="space-y-3">
+            {!isClockedIn ? (
+              <Button 
+                onClick={handleClockIn}
+                className="w-full rounded-xl bg-gradient-success hover:opacity-90"
+                size="lg"
+              >
+                <LogIn className="w-5 h-5 mr-2" />
+                Clock In
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleClockOut}
+                className="w-full rounded-xl"
+                variant="destructive"
+                size="lg"
+              >
+                <LogOut className="w-5 h-5 mr-2" />
+                Clock Out
+              </Button>
+            )}
+          </div>
+        </Card>
+
+        <Card className="p-6 rounded-2xl bg-gradient-card">
+          <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+            <Coffee className="w-5 h-5 text-primary" />
+            Break Controls
+          </h3>
+          <div className="space-y-3">
+            {!isOnBreak ? (
+              <Button 
+                onClick={handleBreakStart}
+                className="w-full rounded-xl"
+                variant="outline"
+                size="lg"
+                disabled={!isClockedIn}
+              >
+                <Coffee className="w-5 h-5 mr-2" />
+                Start Break
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleBreakEnd}
+                className="w-full rounded-xl bg-gradient-primary hover:opacity-90"
+                size="lg"
+              >
+                <Play className="w-5 h-5 mr-2" />
+                End Break
+              </Button>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* Today's Timeline */}
+      <Card className="p-6 rounded-2xl bg-gradient-card">
+        <h2 className="text-xl font-bold mb-6">Today's Timeline</h2>
+        <div className="space-y-4">
+          {todayActivities.map((activity, i) => (
+            <div key={i} className="flex items-start gap-4">
+              <div className="flex flex-col items-center">
+                <div className="w-3 h-3 rounded-full bg-primary" />
+                {i !== todayActivities.length - 1 && (
+                  <div className="w-0.5 h-12 bg-border" />
+                )}
+              </div>
+              <div className="flex-1 pb-4">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="font-medium">{activity.action}</p>
+                  <Badge variant="outline" className="rounded-lg">
+                    {activity.time}
+                  </Badge>
+                </div>
+                {activity.duration !== "-" && (
+                  <p className="text-sm text-muted-foreground">Duration: {activity.duration}</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Weekly Summary */}
+      <Card className="p-6 rounded-2xl bg-gradient-card">
+        <h2 className="text-xl font-bold mb-6">This Week Summary</h2>
+        <div className="grid gap-4 md:grid-cols-5">
+          {["Mon", "Tue", "Wed", "Thu", "Fri"].map((day, i) => (
+            <div key={day} className="p-4 rounded-xl border border-border text-center">
+              <p className="text-sm text-muted-foreground mb-2">{day}</p>
+              <p className="text-2xl font-bold">{8 + i % 3}h</p>
+              <div className="mt-2 w-full h-2 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-primary" 
+                  style={{ width: `${((8 + i % 3) / 8) * 100}%` }} 
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
