@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Database, Zap, Shield, CheckCircle2, Phone, MapPin, ExternalLink, Upload } from "lucide-react";
 import heroImage from "@/assets/hero-workplace.jpg";
+// logo served from public root (place your image at public/logo-worktrack.png)
+const logoPath = '/logo-worktrack.png';
 import { toast } from "@/hooks/use-toast";
 
 export default function Landing() {
@@ -40,13 +42,20 @@ export default function Landing() {
             {/* Left Content */}
             <div className="space-y-8">
               <div className="space-y-4">
-                <h1 className="text-5xl lg:text-6xl font-bold text-foreground leading-tight">
-                  WorkTrack Pro
-                </h1>
+                <div className="flex items-center gap-4">
+                  <img src={logoPath} alt="WorkTrack Pro" className="w-16 h-16 rounded-lg shadow" />
+                  <div>
+                    <h1 className="text-4xl lg:text-5xl font-bold text-foreground leading-tight">WorkTrack Pro</h1>
+                    <p className="text-sm text-muted-foreground">by BAK Group</p>
+                  </div>
+                </div>
+
                 <p className="text-xl text-muted-foreground">
-                  Employee & task management with client-verified completion and live activity tracking
+                  Employee & task management platform with client-verified completion, live activity tracking and simple OTP verification for task sign-off.
                 </p>
-                <p className="text-sm text-muted-foreground">by BAK Group</p>
+                <p className="text-sm text-muted-foreground">
+                  Aim: help small teams track time, verify completed work with clients, and simplify payroll-ready weekly timesheets.
+                </p>
               </div>
 
               <div className="flex flex-wrap gap-4">
@@ -250,4 +259,4 @@ export default function Landing() {
       </section>
     </div>
   );
-}
+}  

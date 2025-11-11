@@ -1,0 +1,30 @@
+# Render manifest for two services: frontend (static site) and backend (Next.js web service)
+# Edit env vars/secrets and the branch/repo fields before deploying.
+
+services:
+  - type: "static_site"
+    name: "worktrack-pro-frontend"
+    repo: "https://github.com/<your-org-or-user>/<repo-name>"
+    branch: "main"
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: "dist"
+    env: {}
+    autoDeploy: true
+
+  - type: "web_service"
+    name: "worktrack-pro-server"
+    repo: "https://github.com/<your-org-or-user>/<repo-name>"
+    branch: "main"
+    env: "node"
+    plan: "free"
+    buildCommand: "cd server && npm install && npm run build"
+    startCommand: "cd server && npm run start"
+    envVars: []
+    autoDeploy: true
+
+# Notes:
+# - Replace repo with your GitHub repo URL and branch as needed.
+# - Add environment variables and secrets via Render dashboard or envVars above.
+# - Render will run the build commands and publish the frontend `dist` folder.
+# - The backend is configured as a Node web service that builds the Next app in `server/` and runs `next start`.
+# - If you want to use a managed Postgres or other services, add them as resources in Render and connect via env vars.

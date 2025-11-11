@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,59 +20,45 @@ interface Employee {
 
 export default function LiveNow() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [employees, setEmployees] = useState<Employee[]>([]);
 
-  const employees: Employee[] = [
-    {
-      id: 1,
-      name: "John Doe",
-      status: "ON_TASK",
-      activeTask: "Complete client website design",
-      timer: "02:34:56",
-      lastActivity: "Just now",
-      avatar: "JD",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      status: "ON_BREAK",
-      timer: "00:12:45",
-      lastActivity: "13 mins ago",
-      avatar: "JS",
-    },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      status: "ON_TASK",
-      activeTask: "Update database schemas",
-      timer: "01:15:30",
-      lastActivity: "2 mins ago",
-      avatar: "MJ",
-    },
-    {
-      id: 4,
-      name: "Sarah Williams",
-      status: "IDLE",
-      timer: "00:00:00",
-      lastActivity: "8 mins ago",
-      avatar: "SW",
-    },
-    {
-      id: 5,
-      name: "Tom Brown",
-      status: "AFK",
-      timer: "00:45:20",
-      lastActivity: "25 mins ago",
-      avatar: "TB",
-    },
-    {
-      id: 6,
-      name: "Emily Davis",
-      status: "OFFLINE",
-      timer: "00:00:00",
-      lastActivity: "3 hours ago",
-      avatar: "ED",
-    },
-  ];
+  React.useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const [presRes, empRes, teRes] = await Promise.all([
+          fetch('/api/presence/now'),
+          fetch('/api/admin/employees'),
+          fetch('/api/admin/time_entries?limit=200'),
+        ]);
+        const [presJson, empJson, teJson] = await Promise.all([presRes.json(), empRes.json(), teRes.json()]);
+        if (!mounted) return;
+        const pres = presJson.data || [];
+        const emps = empJson.employees || [];
+        const te = teJson.time_entries || [];
+
+        // Build employee statuses by joining presence + profile
+        const list: Employee[] = (emps || []).map((e: any) => {
+          const p = pres.find((x: any) => x.user_id === e.id) || {};
+          const lastTimer = te.find((t: any) => t.user_id === e.id && !t.end_time) || null;
+          return {
+            id: e.employee_id || e.id,
+            name: e.full_name || e.name || 'Unknown',
+            status: (p.status as EmployeeStatus) || (lastTimer ? 'ON_TASK' : 'OFFLINE'),
+            activeTask: p.active_task_id || null,
+            timer: lastTimer ? 'running' : '00:00:00',
+            lastActivity: p.last_heartbeat ? new Date(p.last_heartbeat).toLocaleTimeString() : 'N/A',
+            avatar: (e.full_name || 'U').split(' ').map((s:any)=>s[0]).slice(0,2).join(''),
+          } as Employee;
+        });
+        setEmployees(list);
+      } catch (err) {
+        console.error('LiveNow load error', err);
+      }
+    }
+    load();
+    return () => { mounted = false };
+  }, []);
 
   const getStatusColor = (status: EmployeeStatus) => {
     const colors = {

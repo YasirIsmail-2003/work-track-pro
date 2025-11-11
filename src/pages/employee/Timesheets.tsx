@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -5,27 +6,35 @@ import { Calendar, Clock, Download, Send } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function Timesheets() {
-  const currentWeek = {
-    period: "Jan 8 - Jan 14, 2024",
-    totalHours: "42h 30m",
-    regularHours: "40h",
-    overtime: "2h 30m",
-    status: "draft",
-  };
+  const [profile, setProfile] = React.useState<any | null>(null);
+  const [timesheets, setTimesheets] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
-  const dailyBreakdown = [
-    { day: "Monday", date: "Jan 8", hours: "8h 30m", tasks: 3, breaks: "45m" },
-    { day: "Tuesday", date: "Jan 9", hours: "8h", tasks: 2, breaks: "30m" },
-    { day: "Wednesday", date: "Jan 10", hours: "9h", tasks: 4, breaks: "1h" },
-    { day: "Thursday", date: "Jan 11", hours: "8h", tasks: 3, breaks: "45m" },
-    { day: "Friday", date: "Jan 12", hours: "9h", tasks: 3, breaks: "1h" },
-  ];
+  React.useEffect(() => {
+    let mounted = true;
+    async function load() {
+      setLoading(true);
+      try {
+        const empRes = await fetch('/api/admin/employees');
+        const empJson = await empRes.json();
+        const firstEmployee = (empJson.employees || []).find((e: any) => e.role !== 'ADMIN') || (empJson.employees || [])[0] || null;
+        if (!mounted) return;
+        setProfile(firstEmployee);
 
-  const previousTimesheets = [
-    { period: "Jan 1-7", totalHours: "40h", status: "approved", submittedOn: "Jan 8, 2024" },
-    { period: "Dec 25-31", totalHours: "35h", status: "approved", submittedOn: "Jan 1, 2024" },
-    { period: "Dec 18-24", totalHours: "38h", status: "approved", submittedOn: "Dec 25, 2023" },
-  ];
+        const tsRes = await fetch('/api/admin/timesheets');
+        const tsJson = await tsRes.json();
+        if (!mounted) return;
+        const uid = firstEmployee?.id;
+        setTimesheets((tsJson.timesheets || []).filter((t: any) => t.user_id === uid));
+      } catch (e) {
+        console.error('Timesheets load error', e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    load();
+    return () => { mounted = false };
+  }, []);
 
   const handleSubmit = () => {
     toast({
@@ -40,6 +49,46 @@ export default function Timesheets() {
       description: "Your timesheet is being downloaded",
     });
   };
+
+  const currentWeek = timesheets[0] || null;
+  const previousTimesheets = timesheets.slice(1);
+
+  const [dailyBreakdown, setDailyBreakdown] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    let mounted = true;
+    async function loadDaily() {
+      if (!profile || !currentWeek) return;
+      try {
+        const teRes = await fetch('/api/admin/time_entries?limit=500');
+        const teJson = await teRes.json();
+        const entries = (teJson.time_entries || []).filter((e: any) => e.user_id === profile.id);
+
+        const weekStart = currentWeek.week_start ? new Date(currentWeek.week_start) : null;
+        const weekEnd = currentWeek.week_end ? new Date(currentWeek.week_end) : null;
+        // build a map keyed by date string
+        const map: Record<string, { day: string; date: string; hours: number; tasks: Set<string>; breaks: number }> = {};
+        entries.forEach((en: any) => {
+          if (!en.start_time) return;
+          const st = new Date(en.start_time);
+          if (weekStart && weekEnd && (st < weekStart || st > weekEnd)) return;
+          const key = st.toLocaleDateString();
+          if (!map[key]) map[key] = { day: st.toLocaleString(undefined, { weekday: 'long' }), date: key, hours: 0, tasks: new Set(), breaks: 0 };
+          const durationMs = en.end_time ? (new Date(en.end_time).getTime() - new Date(en.start_time).getTime()) : 0;
+          map[key].hours += durationMs / (1000 * 60 * 60);
+          if (en.task_id) map[key].tasks.add(en.task_id);
+          if (en.is_break) map[key].breaks += 1;
+        });
+
+        const arr = Object.values(map).map((v) => ({ day: v.day, date: v.date, hours: `${v.hours.toFixed(2)}h`, tasks: v.tasks.size, breaks: `${v.breaks}x` }));
+        if (mounted) setDailyBreakdown(arr.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+      } catch (e) {
+        console.error('daily breakdown load error', e);
+      }
+    }
+    loadDaily();
+    return () => { mounted = false };
+  }, [profile, currentWeek]);
 
   return (
     <div className="space-y-8">

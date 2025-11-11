@@ -71,10 +71,10 @@ export function AppLayout({ role }: AppLayoutProps) {
       <header className="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
-            {/* Logo */}
+            {/* Logo (drop your logo image at /public/logo-worktrack.png) */}
             <Link to={`/app/${role}`} className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-gradient-primary flex items-center justify-center">
-                <span className="text-white font-bold text-sm">WT</span>
+              <div className="w-8 h-8 rounded-xl overflow-hidden bg-gradient-primary flex items-center justify-center">
+                  <img src="/logo-worktrack.png" alt="WorkTrack Pro" className="w-full h-full object-cover" />
               </div>
               <span className="font-bold text-lg">WorkTrack Pro</span>
             </Link>

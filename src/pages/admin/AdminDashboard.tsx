@@ -1,3 +1,4 @@
+import React from 'react';
 import { StatsCard } from "@/components/ui/stats-card";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,26 +7,56 @@ import { Users, CheckCircle2, Clock, Calendar, TrendingUp, Activity } from "luci
 import { Link } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 
-const taskData = [
-  { name: "Pending", value: 12 },
-  { name: "In Progress", value: 8 },
-  { name: "Review", value: 5 },
-  { name: "Completed", value: 23 },
-];
-
-const hoursData = [
-  { week: "Week 1", hours: 180 },
-  { week: "Week 2", hours: 210 },
-  { week: "Week 3", hours: 195 },
-  { week: "Week 4", hours: 225 },
-];
-
 export default function AdminDashboard() {
-  const pendingApprovals = [
-    { id: 1, type: "Timesheet", employee: "John Doe", detail: "Week of Jan 8-14", hours: "42h" },
-    { id: 2, type: "Leave", employee: "Jane Smith", detail: "Jan 25-27", days: "3 days" },
-    { id: 3, type: "Onboarding", employee: "Mike Johnson", detail: "New employee", status: "Pending docs" },
+  const [tasks, setTasks] = React.useState<any[]>([]);
+  const [timesheets, setTimesheets] = React.useState<any[]>([]);
+  const [employees, setEmployees] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let mounted = true;
+    async function load() {
+      setLoading(true);
+      try {
+        const [tRes, tsRes, eRes] = await Promise.all([
+          fetch('/api/admin/tasks'),
+          fetch('/api/admin/timesheets'),
+          fetch('/api/admin/employees'),
+        ]);
+        const [tJson, tsJson, eJson] = await Promise.all([tRes.json(), tsRes.json(), eRes.json()]);
+        if (!mounted) return;
+        setTasks(tJson.tasks || []);
+        setTimesheets(tsJson.timesheets || []);
+        setEmployees(eJson.employees || []);
+      } catch (err) {
+        console.error('AdminDashboard load error', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    load();
+    return () => { mounted = false };
+  }, []);
+
+  const taskData = [
+    { name: 'Pending', value: tasks.filter(t => t.status === 'PENDING').length },
+    { name: 'In Progress', value: tasks.filter(t => t.status === 'IN_PROGRESS').length },
+    { name: 'Review', value: tasks.filter(t => t.status === 'REVIEW').length },
+    { name: 'Completed', value: tasks.filter(t => t.status === 'DONE').length },
   ];
+
+  const hoursData = (() => {
+    // Aggregate weekly hours from timesheets (take last 4)
+    const weeks = timesheets.slice(0,4).map((ts:any, idx:number)=>({ week: `Week ${idx+1}`, hours: Number(ts.total_hours || 0) }));
+    return weeks.length ? weeks : [{ week: 'Week 1', hours: 0 }];
+  })();
+
+  const pendingApprovals = [
+    // Build a small approvals list from timesheets/leaves/onboarding if available
+    ...timesheets.filter(ts => ts.status === 'DRAFT').slice(0,3).map((ts:any,i:number)=>({ id: `ts-${i}`, type: 'Timesheet', employee: employees.find((e:any)=>e.id===ts.user_id)?.full_name || ts.user_id, detail: `Week ${ts.week_start}`, hours: `${ts.total_hours}h` })),
+  ];
+
+  const topPerformers = employees.slice(0,3).map((e:any,i:number)=>({ name: e.full_name || e.employee_id || String(i+1), tasks: tasks.filter((t:any)=>t.assignee===e.id).length, hours: timesheets.filter((ts:any)=>ts.user_id===e.id).reduce((s:any, x:any)=>s+Number(x.total_hours||0),0), efficiency: '—' }));
 
   return (
     <div className="space-y-8">

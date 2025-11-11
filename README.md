@@ -36,6 +36,17 @@ npm i
 npm run dev
 ```
 
+## Add your logo
+
+Place the provided WorkTrack Pro logo image in two locations to make it available across the app and as a favicon:
+
+- Public (used by the HTML shell / favicon):
+  - `public/logo-worktrack.svg` (or `public/logo-worktrack.png`)
+- Frontend assets (optional, if you want to import it inside components):
+  - `src/assets/logo-worktrack.png` or `src/assets/logo-worktrack.svg`
+
+I updated the header to load `/logo-worktrack.svg` from the public root and added a favicon/meta preview entry in `index.html`. If you drop your image at `public/logo-worktrack.svg` the app will automatically show it in the header and as the site icon.
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).

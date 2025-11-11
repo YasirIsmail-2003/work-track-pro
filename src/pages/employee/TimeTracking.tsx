@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,36 @@ export default function TimeTracking() {
   const [isClockedIn, setIsClockedIn] = useState(true);
   const [isOnBreak, setIsOnBreak] = useState(false);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
+  const [profile, setProfile] = useState<any | null>(null);
+  const [timeEntries, setTimeEntries] = useState<any[]>([]);
+  const [presence, setPresence] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const empRes = await fetch('/api/admin/employees');
+        const empJson = await empRes.json();
+        const firstEmployee = (empJson.employees || []).find((e: any) => e.role !== 'ADMIN') || (empJson.employees || [])[0] || null;
+        if (!mounted) return;
+        setProfile(firstEmployee);
+
+        const [teRes, presRes] = await Promise.all([
+          fetch('/api/admin/time_entries?limit=50'),
+          fetch('/api/presence/now'),
+        ]);
+        const [teJson, presJson] = await Promise.all([teRes.json(), presRes.json()]);
+        if (!mounted) return;
+        const uid = firstEmployee?.id;
+        setTimeEntries((teJson.time_entries || []).filter((t: any) => t.user_id === uid));
+        setPresence(presJson.data || []);
+      } catch (e) {
+        console.error('TimeTracking load error', e);
+      }
+    }
+    load();
+    return () => { mounted = false };
+  }, []);
 
   const handleClockIn = () => {
     setIsClockedIn(true);
@@ -33,14 +64,11 @@ export default function TimeTracking() {
     toast({ title: "Break ended", description: "Welcome back!" });
   };
 
-  const todayActivities = [
-    { time: "09:00 AM", action: "Clocked In", duration: "-" },
-    { time: "09:15 AM", action: "Started Task: Website Design", duration: "-" },
-    { time: "11:00 AM", action: "Break Started", duration: "-" },
-    { time: "11:15 AM", action: "Break Ended", duration: "15 min" },
-    { time: "01:00 PM", action: "Break Started", duration: "-" },
-    { time: "01:30 PM", action: "Break Ended", duration: "30 min" },
-  ];
+  const todayActivities = (timeEntries || []).map((te) => ({
+    time: te.start_time ? new Date(te.start_time).toLocaleTimeString() : '',
+    action: te.is_break ? 'Break' : (te.task_id ? `Task ${te.task_id}` : 'Work block'),
+    duration: te.end_time ? Math.round((new Date(te.end_time).getTime() - new Date(te.start_time).getTime()) / 60000) + ' min' : '-',
+  }));
 
   return (
     <div className="space-y-8">

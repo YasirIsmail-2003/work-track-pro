@@ -13,6 +13,12 @@ import Timesheets from "./pages/employee/Timesheets";
 import LeaveManagement from "./pages/employee/LeaveManagement";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import LiveNow from "./pages/admin/LiveNow";
+import AdminEmployees from "./pages/admin/Employees";
+import EmployeeDetail from "./pages/admin/EmployeeDetail";
+import AdminOnboarding from "./pages/admin/Onboarding";
+import AdminTasks from "./pages/admin/Tasks";
+import AdminClients from "./pages/admin/Clients";
+import AdminTimesheets from "./pages/admin/Timesheets";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,12 +46,12 @@ const App = () => (
           <Route path="/app/admin" element={<AppLayout role="admin" />}>
             <Route index element={<AdminDashboard />} />
             <Route path="now" element={<LiveNow />} />
-            <Route path="employees" element={<div>Employees - Coming soon</div>} />
-            <Route path="employees/:id" element={<div>Employee Details - Coming soon</div>} />
-            <Route path="onboarding" element={<div>Onboarding - Coming soon</div>} />
-            <Route path="tasks" element={<div>Tasks Management - Coming soon</div>} />
-            <Route path="clients" element={<div>Clients - Coming soon</div>} />
-            <Route path="timesheets" element={<div>Timesheets Approval - Coming soon</div>} />
+            <Route path="employees" element={<AdminEmployees />} />
+            <Route path="employees/:id" element={<EmployeeDetail />} />
+            <Route path="onboarding" element={<AdminOnboarding />} />
+            <Route path="tasks" element={<AdminTasks />} />
+            <Route path="clients" element={<AdminClients />} />
+            <Route path="timesheets" element={<AdminTimesheets />} />
           </Route>
 
           {/* Catch all */}

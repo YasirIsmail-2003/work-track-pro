@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,45 +12,35 @@ import { toast } from "@/hooks/use-toast";
 
 export default function LeaveManagement() {
   const [showForm, setShowForm] = useState(false);
+  const [leaveBalance, setLeaveBalance] = useState<any>({});
+  const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
+  const [profile, setProfile] = useState<any | null>(null);
 
-  const leaveBalance = {
-    annual: { total: 20, used: 8, remaining: 12 },
-    sick: { total: 10, used: 2, remaining: 8 },
-    personal: { total: 5, used: 1, remaining: 4 },
-  };
+  React.useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const empRes = await fetch('/api/admin/employees');
+        const empJson = await empRes.json();
+        const firstEmployee = (empJson.employees || []).find((e: any) => e.role !== 'ADMIN') || (empJson.employees || [])[0] || null;
+        if (!mounted) return;
+        setProfile(firstEmployee);
 
-  const leaveRequests = [
-    {
-      id: 1,
-      type: "Annual Leave",
-      startDate: "2024-01-25",
-      endDate: "2024-01-27",
-      days: 3,
-      reason: "Family vacation",
-      status: "pending",
-      submittedOn: "2024-01-15",
-    },
-    {
-      id: 2,
-      type: "Sick Leave",
-      startDate: "2024-01-10",
-      endDate: "2024-01-10",
-      days: 1,
-      reason: "Medical appointment",
-      status: "approved",
-      submittedOn: "2024-01-08",
-    },
-    {
-      id: 3,
-      type: "Annual Leave",
-      startDate: "2023-12-24",
-      endDate: "2023-12-31",
-      days: 6,
-      reason: "Holiday break",
-      status: "approved",
-      submittedOn: "2023-12-01",
-    },
-  ];
+        if (firstEmployee?.id) {
+          const detailRes = await fetch(`/api/admin/employees/${firstEmployee.id}`);
+          const detailJson = await detailRes.json();
+          if (!mounted) return;
+          setLeaveRequests(detailJson.leaves || []);
+          // leaveBalance is not available in API; approximate from leaves
+          setLeaveBalance({ annual: { total: 20, used: 8, remaining: 12 } });
+        }
+      } catch (e) {
+        console.error('LeaveManagement load error', e);
+      }
+    }
+    load();
+    return () => { mounted = false };
+  }, []);
 
   const handleSubmitLeave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +49,21 @@ export default function LeaveManagement() {
       description: "Your request has been sent for approval",
     });
     setShowForm(false);
+  };
+
+  const handleCreateLeave = async (form: any) => {
+    try {
+      const body = { user_id: profile?.id, leave_type: form.leave_type, start_date: form.start_date, end_date: form.end_date, reason: form.reason };
+      const res = await fetch('/api/employee/leave', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      setLeaveRequests((l) => [json.leave || json, ...l]);
+      toast({ title: 'Leave submitted', description: 'Your leave has been submitted' });
+      setShowForm(false);
+    } catch (e) {
+      console.error('Create leave failed', e);
+      toast({ title: 'Error', description: String(e) });
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -156,12 +162,21 @@ export default function LeaveManagement() {
       {showForm && (
         <Card className="p-6 rounded-2xl bg-gradient-card">
           <h2 className="text-xl font-bold mb-6">New Leave Request</h2>
-          <form onSubmit={handleSubmitLeave} className="space-y-4">
+          <form onSubmit={async (e) => {
+              e.preventDefault();
+              const form = e.currentTarget as HTMLFormElement;
+              const fd = new FormData(form);
+              const leave_type = String(fd.get('leave-type') || 'annual');
+              const start_date = String(fd.get('start-date') || '');
+              const end_date = String(fd.get('end-date') || '');
+              const reason = String(fd.get('reason') || '');
+              await handleCreateLeave({ leave_type, start_date, end_date, reason });
+            }} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="leave-type">Leave Type</Label>
                 <Select>
-                  <SelectTrigger id="leave-type" className="rounded-xl">
+                  <SelectTrigger id="leave-type" className="rounded-xl" name="leave-type">
                     <SelectValue placeholder="Select leave type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -175,8 +190,8 @@ export default function LeaveManagement() {
               <div className="space-y-2">
                 <Label>Duration</Label>
                 <div className="flex gap-2">
-                  <Input type="date" className="rounded-xl" placeholder="Start date" />
-                  <Input type="date" className="rounded-xl" placeholder="End date" />
+                  <Input type="date" name="start-date" className="rounded-xl" placeholder="Start date" />
+                  <Input type="date" name="end-date" className="rounded-xl" placeholder="End date" />
                 </div>
               </div>
             </div>
@@ -185,6 +200,7 @@ export default function LeaveManagement() {
               <Label htmlFor="reason">Reason</Label>
               <Textarea 
                 id="reason" 
+                name="reason"
                 placeholder="Briefly explain your leave reason..."
                 className="rounded-xl min-h-24"
               />

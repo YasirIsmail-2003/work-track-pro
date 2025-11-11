@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,14 +12,31 @@ export default function EmployeeTasks() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [profile, setProfile] = useState<any | null>(null);
 
-  const tasks = [
-    { id: 1, title: "Complete client website design", status: "in_progress", priority: "high", due: "2024-01-15", client: "Acme Corp", hours: "12/20" },
-    { id: 2, title: "Review project documentation", status: "pending", priority: "medium", due: "2024-01-16", client: "Tech Solutions", hours: "0/5" },
-    { id: 3, title: "Update database schemas", status: "pending", priority: "low", due: "2024-01-18", client: "Data Inc", hours: "0/8" },
-    { id: 4, title: "Implement new features", status: "in_progress", priority: "high", due: "2024-01-14", client: "StartupXYZ", hours: "8/15" },
-    { id: 5, title: "Bug fixes and testing", status: "review", priority: "medium", due: "2024-01-17", client: "Acme Corp", hours: "5/10" },
-  ];
+  React.useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const empRes = await fetch('/api/admin/employees');
+        const empJson = await empRes.json();
+        const firstEmployee = (empJson.employees || []).find((e: any) => e.role !== 'ADMIN') || (empJson.employees || [])[0] || null;
+        if (!mounted) return;
+        setProfile(firstEmployee);
+
+        const res = await fetch('/api/admin/tasks');
+        const json = await res.json();
+        if (!mounted) return;
+        const uid = firstEmployee?.id;
+        setTasks((json.tasks || []).filter((t: any) => t.assignee === uid));
+      } catch (e) {
+        console.error('EmployeeTasks load error', e);
+      }
+    }
+    load();
+    return () => { mounted = false };
+  }, []);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: "default" | "secondary" | "outline", label: string }> = {
