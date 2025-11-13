@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
+import { apiFetch } from "@/lib/api-client";
 
 const AdminTasks = () => {
   const [tasks, setTasks] = React.useState<any[]>([]);
@@ -13,7 +14,7 @@ const AdminTasks = () => {
   React.useEffect(() => {
     let mounted = true;
     setLoading(true);
-    fetch('/api/admin/tasks')
+    apiFetch('/api/admin/tasks')
       .then((r) => r.json())
       .then((data) => {
         if (!mounted) return;
@@ -37,7 +38,7 @@ const AdminTasks = () => {
           if (!title) return;
           const desc = window.prompt('Description (optional)') || '';
           try {
-            const res = await fetch('/api/admin/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, description: desc }) });
+            const res = await apiFetch('/api/admin/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, description: desc }) });
             const data = await res.json();
             if (data.error) throw new Error(data.error);
             setTasks((t) => [data.task, ...t]);

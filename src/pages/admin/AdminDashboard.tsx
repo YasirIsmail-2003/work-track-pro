@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users, CheckCircle2, Clock, Calendar, TrendingUp, Activity } from "lucide-react";
 import { Link } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { apiFetch } from "@/lib/api-client";
 
 export default function AdminDashboard() {
   const [tasks, setTasks] = React.useState<any[]>([]);
@@ -19,9 +20,9 @@ export default function AdminDashboard() {
       setLoading(true);
       try {
         const [tRes, tsRes, eRes] = await Promise.all([
-          fetch('/api/admin/tasks'),
-          fetch('/api/admin/timesheets'),
-          fetch('/api/admin/employees'),
+          apiFetch('/api/admin/tasks'),
+          apiFetch('/api/admin/timesheets'),
+          apiFetch('/api/admin/employees'),
         ]);
         const [tJson, tsJson, eJson] = await Promise.all([tRes.json(), tsRes.json(), eRes.json()]);
         if (!mounted) return;

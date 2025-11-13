@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, User, Mail, Phone, Calendar, DollarSign, Clock, FileText, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiFetch } from "@/lib/api-client";
 
 const EmployeeDetail = () => {
   const { id } = useParams();
@@ -27,7 +28,7 @@ const EmployeeDetail = () => {
     if (!id) return;
     let mounted = true;
     setLoading(true);
-    fetch(`/api/admin/employees/${id}`)
+    apiFetch(`/api/admin/employees/${id}`)
       .then((r) => r.json())
       .then((data) => {
         if (!mounted) return;
@@ -50,7 +51,7 @@ const EmployeeDetail = () => {
     async function loadAudit() {
       if (!id) return;
       try {
-        const res = await fetch(`/api/admin/audit?user_id=${id}&limit=200`);
+        const res = await apiFetch(`/api/admin/audit?user_id=${id}&limit=200`);
         const json = await res.json();
         if (!mounted) return;
         const rows = (json.events || []).map((r:any) => ({ action: r.type === 'time_entry' ? (r.payload.is_break ? 'Break' : (r.payload.task_id ? `Work on ${r.payload.task_id}` : 'Work block')) : r.type, date: r.timestamp || r.payload?.created_at, by: profile?.full_name || id }));

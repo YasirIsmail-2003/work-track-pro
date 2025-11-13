@@ -9,10 +9,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar as CalendarIcon, Plus, Clock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { apiFetch } from "@/lib/api-client";
 
 export default function LeaveManagement() {
   const [showForm, setShowForm] = useState(false);
-  const [leaveBalance, setLeaveBalance] = useState<any>({});
+  const [leaveBalance, setLeaveBalance] = useState<any>({
+    annual: { total: 20, used: 8, remaining: 12 },
+    sick: { total: 10, used: 2, remaining: 8 },
+    personal: { total: 5, used: 1, remaining: 4 },
+  });
   const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
   const [profile, setProfile] = useState<any | null>(null);
 
@@ -20,14 +25,14 @@ export default function LeaveManagement() {
     let mounted = true;
     async function load() {
       try {
-        const empRes = await fetch('/api/admin/employees');
+        const empRes = await apiFetch('/api/admin/employees');
         const empJson = await empRes.json();
         const firstEmployee = (empJson.employees || []).find((e: any) => e.role !== 'ADMIN') || (empJson.employees || [])[0] || null;
         if (!mounted) return;
         setProfile(firstEmployee);
 
         if (firstEmployee?.id) {
-          const detailRes = await fetch(`/api/admin/employees/${firstEmployee.id}`);
+          const detailRes = await apiFetch(`/api/admin/employees/${firstEmployee.id}`);
           const detailJson = await detailRes.json();
           if (!mounted) return;
           setLeaveRequests(detailJson.leaves || []);
@@ -54,7 +59,7 @@ export default function LeaveManagement() {
   const handleCreateLeave = async (form: any) => {
     try {
       const body = { user_id: profile?.id, leave_type: form.leave_type, start_date: form.start_date, end_date: form.end_date, reason: form.reason };
-      const res = await fetch('/api/employee/leave', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const res = await apiFetch('/api/employee/leave', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const json = await res.json();
       if (json.error) throw new Error(json.error);
       setLeaveRequests((l) => [json.leave || json, ...l]);

@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { apiFetch } from "@/lib/api-client";
 
 const AdminClients = () => {
   const [clients, setClients] = React.useState<any[]>([]);
@@ -10,7 +11,7 @@ const AdminClients = () => {
 
   React.useEffect(() => {
     let mounted = true;
-    fetch('/api/admin/clients')
+    apiFetch('/api/admin/clients')
       .then((r) => r.json())
       .then((data) => {
         if (!mounted) return;
@@ -28,7 +29,7 @@ const AdminClients = () => {
     const email = window.prompt('Contact email (optional)') || '';
     try {
       setLoading(true);
-      const res = await fetch('/api/admin/clients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, contact_email: email }) });
+      const res = await apiFetch('/api/admin/clients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, contact_email: email }) });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setClients((c) => [data.client, ...c]);

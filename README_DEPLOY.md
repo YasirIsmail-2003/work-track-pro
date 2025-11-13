@@ -12,17 +12,16 @@ Prerequisites
 - GitHub repo containing this code.
 - Accounts on Render and/or Vercel with access to that GitHub repo.
 - Node v18+ recommended for building both parts.
-- Ensure secrets and sensitive files are not committed (use `.env` locally and `server/.env.example` in the repo).
+- Ensure secrets and sensitive files are not committed (use `.env` locally and the provided `env.sample` / `server/env.sample` files as references).
 
 Environment variables (examples — do NOT commit values)
-- DATABASE_URL (Postgres connection string)
-- NEXT_PUBLIC_SUPABASE_URL
-- NEXT_PUBLIC_SUPABASE_ANON_KEY
-- SUPABASE_SERVICE_ROLE_KEY
-- SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
-- APP_URL (production URL, optional)
-- TZ (time zone)
-- Any `NEXT_PUBLIC_` variables used by frontend
+- `VITE_API_BASE_URL` (frontend uses this to call the backend; set to the deployed backend URL, e.g. `https://worktrack-pro-server.onrender.com`)
+- `DATABASE_URL` (Postgres connection string) or `SUPABASE_DB_URL`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
+- `APP_URL` (production frontend URL, used in transactional emails)
+- Any other `NEXT_PUBLIC_*` variables you add
 
 Local build & test (PowerShell)
 - From repo root (frontend):
@@ -41,7 +40,7 @@ Local build & test (PowerShell)
   npm run start    # run production server after build
   ```
 
-Important: keep secrets out of git. Use `server/.env` locally (gitignored) and `server/.env.example` for placeholder names in the repo.
+Important: keep secrets out of git. Copy `env.sample` ➜ `.env` at the repo root and `server/env.sample` ➜ `server/.env.local` (or `.env`) for local development. Both sample files list every required variable with safe placeholders.
 
 Deploying to Render
 -------------------

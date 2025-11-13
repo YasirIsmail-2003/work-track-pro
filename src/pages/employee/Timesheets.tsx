@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Download, Send } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { apiFetch } from "@/lib/api-client";
 
 export default function Timesheets() {
   const [profile, setProfile] = React.useState<any | null>(null);
@@ -15,13 +16,13 @@ export default function Timesheets() {
     async function load() {
       setLoading(true);
       try {
-        const empRes = await fetch('/api/admin/employees');
+        const empRes = await apiFetch('/api/admin/employees');
         const empJson = await empRes.json();
         const firstEmployee = (empJson.employees || []).find((e: any) => e.role !== 'ADMIN') || (empJson.employees || [])[0] || null;
         if (!mounted) return;
         setProfile(firstEmployee);
 
-        const tsRes = await fetch('/api/admin/timesheets');
+        const tsRes = await apiFetch('/api/admin/timesheets');
         const tsJson = await tsRes.json();
         if (!mounted) return;
         const uid = firstEmployee?.id;
@@ -60,7 +61,7 @@ export default function Timesheets() {
     async function loadDaily() {
       if (!profile || !currentWeek) return;
       try {
-        const teRes = await fetch('/api/admin/time_entries?limit=500');
+        const teRes = await apiFetch('/api/admin/time_entries?limit=500');
         const teJson = await teRes.json();
         const entries = (teJson.time_entries || []).filter((e: any) => e.user_id === profile.id);
 

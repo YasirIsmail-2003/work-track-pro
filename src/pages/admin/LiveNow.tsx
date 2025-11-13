@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Clock, Coffee, User, AlertCircle, Activity, Search, Bell } from "lucide-react";
 import { useState } from "react";
+import { apiFetch } from "@/lib/api-client";
 
 type EmployeeStatus = "ON_TASK" | "ON_BREAK" | "IDLE" | "AFK" | "OFFLINE";
 
@@ -27,9 +28,9 @@ export default function LiveNow() {
     async function load() {
       try {
         const [presRes, empRes, teRes] = await Promise.all([
-          fetch('/api/presence/now'),
-          fetch('/api/admin/employees'),
-          fetch('/api/admin/time_entries?limit=200'),
+          apiFetch('/api/presence/now'),
+          apiFetch('/api/admin/employees'),
+          apiFetch('/api/admin/time_entries?limit=200'),
         ]);
         const [presJson, empJson, teJson] = await Promise.all([presRes.json(), empRes.json(), teRes.json()]);
         if (!mounted) return;

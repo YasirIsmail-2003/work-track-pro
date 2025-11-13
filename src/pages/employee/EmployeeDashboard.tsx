@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, CheckCircle2, DollarSign, AlertCircle, Play, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
+import { apiFetch } from "@/lib/api-client";
 
 export default function EmployeeDashboard() {
   const [profile, setProfile] = React.useState<any | null>(null);
@@ -20,7 +21,7 @@ export default function EmployeeDashboard() {
       setLoading(true);
       try {
         // pick a representative employee (first non-admin) for dev/testing
-        const empRes = await fetch('/api/admin/employees');
+        const empRes = await apiFetch('/api/admin/employees');
         const empJson = await empRes.json();
         const firstEmployee = (empJson.employees || []).find((e: any) => e.role !== 'ADMIN') || (empJson.employees || [])[0] || null;
         if (!mounted) return;
@@ -28,10 +29,10 @@ export default function EmployeeDashboard() {
 
         // load tasks and timesheets and presence and recent time entries
         const [tasksRes, tsRes, presRes, teRes] = await Promise.all([
-          fetch('/api/admin/tasks'),
-          fetch('/api/admin/timesheets'),
-          fetch('/api/presence/now'),
-          fetch('/api/admin/time_entries?limit=10'),
+          apiFetch('/api/admin/tasks'),
+          apiFetch('/api/admin/timesheets'),
+          apiFetch('/api/presence/now'),
+          apiFetch('/api/admin/time_entries?limit=10'),
         ]);
 
         const [tasksJson, tsJson, presJson, teJson] = await Promise.all([tasksRes.json(), tsRes.json(), presRes.json(), teRes.json()]);

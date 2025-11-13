@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Coffee, LogIn, LogOut, Play, Pause } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { apiFetch } from "@/lib/api-client";
 
 export default function TimeTracking() {
   const [isClockedIn, setIsClockedIn] = useState(true);
@@ -18,15 +19,15 @@ export default function TimeTracking() {
     let mounted = true;
     async function load() {
       try {
-        const empRes = await fetch('/api/admin/employees');
+        const empRes = await apiFetch('/api/admin/employees');
         const empJson = await empRes.json();
         const firstEmployee = (empJson.employees || []).find((e: any) => e.role !== 'ADMIN') || (empJson.employees || [])[0] || null;
         if (!mounted) return;
         setProfile(firstEmployee);
 
         const [teRes, presRes] = await Promise.all([
-          fetch('/api/admin/time_entries?limit=50'),
-          fetch('/api/presence/now'),
+          apiFetch('/api/admin/time_entries?limit=50'),
+          apiFetch('/api/presence/now'),
         ]);
         const [teJson, presJson] = await Promise.all([teRes.json(), presRes.json()]);
         if (!mounted) return;

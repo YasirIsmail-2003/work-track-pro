@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Users, FileCheck, X, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { apiFetch } from "@/lib/api-client";
 
 const AdminOnboarding = () => {
   const { toast } = useToast();
@@ -20,7 +21,7 @@ const AdminOnboarding = () => {
 
   React.useEffect(() => {
     let mounted = true;
-    fetch('/api/admin/onboarding')
+    apiFetch('/api/admin/onboarding')
       .then((r) => r.json())
       .then((data) => {
         if (!mounted) return;
@@ -35,7 +36,7 @@ const AdminOnboarding = () => {
   const refresh = () => {
     setLoading(true);
     setError(null);
-    fetch('/api/admin/onboarding')
+    apiFetch('/api/admin/onboarding')
       .then((r) => r.json())
       .then((data) => {
         if (data.error) setError(data.error);
@@ -47,7 +48,7 @@ const AdminOnboarding = () => {
 
   const handleApprove = async (id: string, name: string) => {
     try {
-      const res = await fetch(`/api/admin/onboarding/${id}/approve`, { method: 'POST' });
+      const res = await apiFetch(`/api/admin/onboarding/${id}/approve`, { method: 'POST' });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       toast({ title: 'Application approved', description: `${name} has been approved and added to the system` });
@@ -64,7 +65,7 @@ const AdminOnboarding = () => {
       return;
     }
     try {
-      const res = await fetch(`/api/admin/onboarding/${selectedApplicant.id}/reject`, {
+      const res = await apiFetch(`/api/admin/onboarding/${selectedApplicant.id}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: rejectionReason }),

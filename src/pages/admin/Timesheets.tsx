@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { apiFetch } from "@/lib/api-client";
 
 const AdminTimesheets = () => {
   const [timesheets, setTimesheets] = React.useState<any[]>([]);
@@ -10,7 +10,7 @@ const AdminTimesheets = () => {
 
   React.useEffect(() => {
     let mounted = true;
-    fetch('/api/admin/timesheets')
+    apiFetch('/api/admin/timesheets')
       .then((r) => r.json())
       .then((data) => {
         if (!mounted) return;
@@ -25,7 +25,7 @@ const AdminTimesheets = () => {
   const refresh = () => {
     setLoading(true);
     setError(null);
-    fetch('/api/admin/timesheets')
+    apiFetch('/api/admin/timesheets')
       .then((r) => r.json())
       .then((data) => {
         if (data.error) setError(data.error);
@@ -37,7 +37,7 @@ const AdminTimesheets = () => {
 
   const approve = async (id: string) => {
     try {
-      const res = await fetch(`/api/admin/timesheets/${id}/approve`, { method: 'POST' });
+      const res = await apiFetch(`/api/admin/timesheets/${id}/approve`, { method: 'POST' });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       refresh();
@@ -48,7 +48,7 @@ const AdminTimesheets = () => {
 
   const returnSheet = async (id: string) => {
     try {
-      const res = await fetch(`/api/admin/timesheets/${id}/return`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason: 'Please correct hours' }) });
+      const res = await apiFetch(`/api/admin/timesheets/${id}/return`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason: 'Please correct hours' }) });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       refresh();

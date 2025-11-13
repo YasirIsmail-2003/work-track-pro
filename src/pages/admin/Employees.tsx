@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { Users, Search, UserPlus } from "lucide-react";
+import { apiFetch } from "@/lib/api-client";
 
 const AdminEmployees = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const AdminEmployees = () => {
 
   React.useEffect(() => {
     let mounted = true;
-    fetch('/api/admin/employees')
+    apiFetch('/api/admin/employees')
       .then((r) => r.json())
       .then((data) => {
         if (!mounted) return;

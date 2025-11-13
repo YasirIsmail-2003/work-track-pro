@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter, Play, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { apiFetch } from "@/lib/api-client";
 
 export default function EmployeeTasks() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,13 +20,13 @@ export default function EmployeeTasks() {
     let mounted = true;
     async function load() {
       try {
-        const empRes = await fetch('/api/admin/employees');
+        const empRes = await apiFetch('/api/admin/employees');
         const empJson = await empRes.json();
         const firstEmployee = (empJson.employees || []).find((e: any) => e.role !== 'ADMIN') || (empJson.employees || [])[0] || null;
         if (!mounted) return;
         setProfile(firstEmployee);
 
-        const res = await fetch('/api/admin/tasks');
+        const res = await apiFetch('/api/admin/tasks');
         const json = await res.json();
         if (!mounted) return;
         const uid = firstEmployee?.id;
