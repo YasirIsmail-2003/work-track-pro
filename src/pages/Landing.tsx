@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Database, Zap, Shield, CheckCircle2, Phone, MapPin, ExternalLink, Upload } from "lucide-react";
 import heroImage from "@/assets/hero-workplace.jpg";
 // logo served from public root (place your image at public/logo-worktrack.png)
-const logoPath = '/logo-worktrack.png';
+const logoPath = '/logo-worktrack.svg';
 import { toast } from "@/hooks/use-toast";
 
 export default function Landing() {
